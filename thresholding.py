@@ -13,11 +13,13 @@ from invokeai.app.invocations.baseinvocation import (
     InputField,
     InvocationContext,
     OutputField,
+    WithMetadata,
+    WithWorkflow,
     invocation,
     invocation_output,
 )
 from invokeai.app.invocations.primitives import ImageField, ImageOutput
-from invokeai.app.models.image import ImageCategory, ResourceOrigin
+from invokeai.app.services.image_records.image_records_common import ImageCategory, ResourceOrigin
 from invokeai.app.util.misc import SEED_MAX, get_random_seed
 
 
@@ -25,16 +27,16 @@ from invokeai.app.util.misc import SEED_MAX, get_random_seed
 class ThresholdingOutput(BaseInvocationOutput):
     """Thresholding output class"""
 
-    highlights_mask: ImageField = OutputField(default=None)
-    midtones_mask: ImageField = OutputField(default=None)
-    shadows_mask: ImageField = OutputField(default=None)
+    highlights_mask: ImageField = OutputField()
+    midtones_mask: ImageField = OutputField()
+    shadows_mask: ImageField = OutputField()
 
 
 @invocation("thresholding", title="Thresholding", tags=["thresholding"], version="1.0.0")
-class ThresholdingInvocation(BaseInvocation):
+class ThresholdingInvocation(BaseInvocation, WithMetadata, WithWorkflow):
     """Puts out 3 masks for a source image representing highlights, midtones, and shadows"""
 
-    image: ImageField = InputField(description="The image to add film grain to", default=None)
+    image: ImageField = InputField(description="The image to add film grain to")
     highlights_point: int = InputField(ge=0, le=255, description="Highlight point", default=170)
     shadows_point: int = InputField(ge=0, le=255, description="Shadow point", default=85)
     lut_blur: float = InputField(ge=0, description="LUT blur", default=0.0)
@@ -71,7 +73,7 @@ class ThresholdingInvocation(BaseInvocation):
             node_id=self.id,
             session_id=context.graph_execution_state_id,
             is_intermediate=self.is_intermediate,
-            metadata=None,
+            metadata=self.metadata,
             workflow=self.workflow,
         )
 
@@ -82,7 +84,7 @@ class ThresholdingInvocation(BaseInvocation):
             node_id=self.id,
             session_id=context.graph_execution_state_id,
             is_intermediate=self.is_intermediate,
-            metadata=None,
+            metadata=self.metadata,
             workflow=self.workflow,
         )
 
@@ -93,7 +95,7 @@ class ThresholdingInvocation(BaseInvocation):
             node_id=self.id,
             session_id=context.graph_execution_state_id,
             is_intermediate=self.is_intermediate,
-            metadata=None,
+            metadata=self.metadata,
             workflow=self.workflow,
         )
 
