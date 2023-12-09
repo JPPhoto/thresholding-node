@@ -1,12 +1,7 @@
 # Copyright (c) 2023 Jonathan S. Pollack (https://github.com/JPPhoto)
 
-from typing import Optional
 
 import numpy
-from PIL import Image
-from pydantic import BaseModel
-from scipy.ndimage import gaussian_filter1d
-
 from invokeai.app.invocations.baseinvocation import (
     BaseInvocation,
     BaseInvocationOutput,
@@ -14,13 +9,12 @@ from invokeai.app.invocations.baseinvocation import (
     InvocationContext,
     OutputField,
     WithMetadata,
-    WithWorkflow,
     invocation,
     invocation_output,
 )
-from invokeai.app.invocations.primitives import ImageField, ImageOutput
+from invokeai.app.invocations.primitives import ImageField
 from invokeai.app.services.image_records.image_records_common import ImageCategory, ResourceOrigin
-from invokeai.app.util.misc import SEED_MAX, get_random_seed
+from scipy.ndimage import gaussian_filter1d
 
 
 @invocation_output("thresholding_output")
@@ -33,7 +27,7 @@ class ThresholdingOutput(BaseInvocationOutput):
 
 
 @invocation("thresholding", title="Thresholding", tags=["thresholding"], version="1.0.0")
-class ThresholdingInvocation(BaseInvocation, WithMetadata, WithWorkflow):
+class ThresholdingInvocation(BaseInvocation, WithMetadata):
     """Puts out 3 masks for a source image representing highlights, midtones, and shadows"""
 
     image: ImageField = InputField(description="The image to add film grain to")
@@ -74,7 +68,7 @@ class ThresholdingInvocation(BaseInvocation, WithMetadata, WithWorkflow):
             session_id=context.graph_execution_state_id,
             is_intermediate=self.is_intermediate,
             metadata=self.metadata,
-            workflow=self.workflow,
+            workflow=context.workflow,
         )
 
         m_image_dto = context.services.images.create(
@@ -85,7 +79,7 @@ class ThresholdingInvocation(BaseInvocation, WithMetadata, WithWorkflow):
             session_id=context.graph_execution_state_id,
             is_intermediate=self.is_intermediate,
             metadata=self.metadata,
-            workflow=self.workflow,
+            workflow=context.workflow,
         )
 
         s_image_dto = context.services.images.create(
@@ -96,7 +90,7 @@ class ThresholdingInvocation(BaseInvocation, WithMetadata, WithWorkflow):
             session_id=context.graph_execution_state_id,
             is_intermediate=self.is_intermediate,
             metadata=self.metadata,
-            workflow=self.workflow,
+            workflow=context.workflow,
         )
 
         highlights_output = ImageField(image_name=h_image_dto.image_name)
