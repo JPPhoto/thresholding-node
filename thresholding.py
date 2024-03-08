@@ -1,20 +1,17 @@
 # Copyright (c) 2023 Jonathan S. Pollack (https://github.com/JPPhoto)
 
-
 import numpy
+from scipy.ndimage import gaussian_filter1d
+
 from invokeai.app.invocations.baseinvocation import (
     BaseInvocation,
     BaseInvocationOutput,
-    InputField,
     InvocationContext,
-    OutputField,
-    WithMetadata,
     invocation,
     invocation_output,
 )
+from invokeai.app.invocations.fields import InputField, OutputField, WithBoard, WithMetadata
 from invokeai.app.invocations.primitives import ImageField
-from invokeai.app.services.image_records.image_records_common import ImageCategory, ResourceOrigin
-from scipy.ndimage import gaussian_filter1d
 
 
 @invocation_output("thresholding_output")
@@ -26,8 +23,8 @@ class ThresholdingOutput(BaseInvocationOutput):
     shadows_mask: ImageField = OutputField()
 
 
-@invocation("thresholding", title="Thresholding", tags=["thresholding"], version="1.0.0")
-class ThresholdingInvocation(BaseInvocation, WithMetadata):
+@invocation("thresholding", title="Thresholding", tags=["thresholding"], version="1.1.0")
+class ThresholdingInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Puts out 3 masks for a source image representing highlights, midtones, and shadows"""
 
     image: ImageField = InputField(description="The image to add film grain to")
@@ -44,7 +41,7 @@ class ThresholdingInvocation(BaseInvocation, WithMetadata):
             return filtered_data.tolist()
 
     def invoke(self, context: InvocationContext) -> ThresholdingOutput:
-        image = context.services.images.get_pil_image(self.image.image_name)
+        image = context.images.get_pil(self.image.image_name)
 
         image = image.convert("L")
 
@@ -60,38 +57,10 @@ class ThresholdingInvocation(BaseInvocation, WithMetadata):
         midtones_mask = image.point(lambda p: midtones_lut[p])
         shadows_mask = image.point(lambda p: shadows_lut[p])
 
-        h_image_dto = context.services.images.create(
-            image=highlights_mask,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.MASK,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=context.workflow,
-        )
+        h_image_dto = context.images.save(image=highlights_mask)
+        m_image_dto = context.images.save(image=midtones_mask)
 
-        m_image_dto = context.services.images.create(
-            image=midtones_mask,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.MASK,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=context.workflow,
-        )
-
-        s_image_dto = context.services.images.create(
-            image=shadows_mask,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.MASK,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=context.workflow,
-        )
+        s_image_dto = context.images.save(image=shadows_mask)
 
         highlights_output = ImageField(image_name=h_image_dto.image_name)
 
