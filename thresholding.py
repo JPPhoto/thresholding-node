@@ -3,15 +3,18 @@
 import numpy
 from scipy.ndimage import gaussian_filter1d
 
-from invokeai.app.invocations.baseinvocation import (
+from invokeai.app.invocations.fields import WithBoard
+from invokeai.invocation_api import (
     BaseInvocation,
     BaseInvocationOutput,
+    ImageField,
+    InputField,
     InvocationContext,
+    OutputField,
+    WithMetadata,
     invocation,
     invocation_output,
 )
-from invokeai.app.invocations.fields import InputField, OutputField, WithBoard, WithMetadata
-from invokeai.app.invocations.primitives import ImageField
 
 
 @invocation_output("thresholding_output")
@@ -23,7 +26,7 @@ class ThresholdingOutput(BaseInvocationOutput):
     shadows_mask: ImageField = OutputField()
 
 
-@invocation("thresholding", title="Thresholding", tags=["thresholding"], version="1.1.0")
+@invocation("thresholding", title="Thresholding", tags=["thresholding"], version="1.1.1")
 class ThresholdingInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Puts out 3 masks for a source image representing highlights, midtones, and shadows"""
 
