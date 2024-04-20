@@ -26,7 +26,7 @@ class ThresholdingOutput(BaseInvocationOutput):
     shadows_mask: ImageField = OutputField()
 
 
-@invocation("thresholding", title="Thresholding", tags=["thresholding"], version="1.1.2")
+@invocation("thresholding", title="Thresholding", tags=["thresholding"], version="1.1.3")
 class ThresholdingInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Puts out 3 masks for a source image representing highlights, midtones, and shadows"""
 
@@ -44,9 +44,7 @@ class ThresholdingInvocation(BaseInvocation, WithMetadata, WithBoard):
             return filtered_data.tolist()
 
     def invoke(self, context: InvocationContext) -> ThresholdingOutput:
-        image = context.images.get_pil(self.image.image_name)
-
-        image = image.convert("L")
+        image = context.images.get_pil(self.image.image_name, mode="L")
 
         highlights_lut = [0 if p > self.highlights_point else 255 for p in range(0, 256)]
         midtones_lut = [0 if (p <= self.highlights_point and p > self.shadows_point) else 255 for p in range(0, 256)]
