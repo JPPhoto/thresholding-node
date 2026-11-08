@@ -1,8 +1,6 @@
 # Copyright (c) 2024 Jonathan S. Pollack (https://github.com/JPPhoto)
 
 import numpy
-from scipy.ndimage import gaussian_filter1d
-
 from invokeai.invocation_api import (
     BaseInvocation,
     BaseInvocationOutput,
@@ -15,6 +13,7 @@ from invokeai.invocation_api import (
     invocation,
     invocation_output,
 )
+from scipy.ndimage import gaussian_filter1d
 
 
 @invocation_output("thresholding_output")
